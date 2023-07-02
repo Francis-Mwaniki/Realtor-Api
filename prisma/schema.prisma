@@ -10,63 +10,65 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Home{
-  id      Int      @id @default(autoincrement())
-  address String 
-  number_of_bedrooms Int
-  number_of_bathrooms Float
-  city String
-  listed_date  DateTime @default(now())
-  price Float
-  land_size Float
-  propertyType propertyType
-  images Image[]
-  homes User[]
-  messages Message[]
-}
-model Image{
-  id      Int      @id @default(autoincrement())
-  url String
-  home_id Int
-  home Home @relation(fields: [home_id], references: [id])
+model User {
+  id                    Int   @id @default(autoincrement())
+  name                  String
+  phone                 String
+  email                 String  @unique
+  password              String
+  created_at            DateTime @default(now())
+  updated_at            DateTime @updatedAt
+  user_type             UserType
+  homes                 Home[]
+  buyer_messages        Message[] @relation("buyer_messages")
+  realtor_messages      Message[] @relation("realtor_messages")
 }
 
-model User{
-  id      Int      @id @default(autoincrement())
-  email String @unique
-  Phone String 
-  password String
-  name String
-  phone String
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt 
-  userType UserType
-  realtor_id Int
-  realtor Home @relation(fields: [realtor_id], references: [id]) 
-  buyer_message Message[] @relation("buyer_message")
-  realtor_message Message[] @relation("realtor_message")
+model Home {
+  id                    Int   @id @default(autoincrement())
+  address               String
+  number_of_bedrooms    Int
+  number_of_bathrooms   Float
+  city                  String
+  listed_date           DateTime @default(now())
+  price                 Float
+  land_size             Float
+  propertyType          PropertyType
+  created_at            DateTime @default(now())
+  updated_at            DateTime @updatedAt
+  images                Image[]
+  realtor_id            Int
+  realtor               User @relation(fields: [realtor_id], references: [id])
+  messages              Message[]
 }
 
-model Message{
-  id      Int      @id @default(autoincrement())
-  message String
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt 
-  home_id Int
-  home Home @relation(fields: [home_id], references: [id])
-  realtor_id Int
-  realtor User @relation("realtor_message",fields: [realtor_id], references: [id])
-  buyer_id Int
-  buyer User @relation("buyer_message",fields: [buyer_id], references: [id])
+model Image {
+  id                    Int   @id @default(autoincrement())
+  url                   String
+  created_at            DateTime @default(now())
+  updated_at            DateTime @updatedAt
+  home_id               Int
+  home                  Home @relation(fields: [home_id], references: [id])
 }
 
-enum UserType{
-  ADMIN
-  BUYER
-  REALTOR
+model Message {
+  id                    Int   @id @default(autoincrement())
+  message               String
+  home_id               Int
+  home                  Home @relation(fields: [home_id], references: [id])
+  realtor_id            Int
+  realtor               User @relation("buyer_messages", fields: [realtor_id], references: [id])
+  buyer_id              Int
+  buyer                 User @relation("realtor_messages", fields: [buyer_id], references: [id])
 }
 
-enum propertyType{
+enum PropertyType {
   RESIDENTIAL
   CONDO
+}
+
+enum UserType {
+  BUYER
+  REALTOR
+  ADMIN
 }
