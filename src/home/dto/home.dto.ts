@@ -17,6 +17,7 @@ export class HomeResponseDto {
 
   @Exclude()
   number_of_bedrooms: number;
+  static select: any;
 
   @Expose({ name: 'numberOfBedrooms' })
   numberOfBedrooms() {
