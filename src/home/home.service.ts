@@ -137,6 +137,9 @@ export class HomeService {
         id: true,
       },
     });
+    if (!homeImages.length) {
+      throw new NotFoundException('Home not found');
+    }
     if (homeImages.length) {
       await this.prismaService.image.deleteMany({
         where: {
@@ -147,7 +150,7 @@ export class HomeService {
       /* find if id exist */
       const home = await this.prismaService.home.findUnique({
         where: {
-          id,
+          id: id,
         },
         select: {
           id: true,
@@ -163,5 +166,29 @@ export class HomeService {
       });
       return { message: 'Home deleted successfully' };
     }
+  }
+
+  async getRealtorByHomeId(id: number) {
+    const home = await this.prismaService.home.findUnique({
+      where: {
+        id: id,
+      },
+      select: {
+        realtor: {
+          select: {
+            name: true,
+            id: true,
+            email: true,
+            phone: true,
+          },
+        },
+      },
+    });
+
+    if (!home) {
+      throw new NotFoundException();
+    }
+
+    return home.realtor;
   }
 }

@@ -31,3 +31,10 @@ export interface CreateHomeParams {
   propertyType: PropertyType;
   images: { url: string }[];
 }
+
+export interface whichUser {
+  id: number;
+  name: string;
+  iat: number;
+  exp: number;
+}

@@ -8,11 +8,17 @@ import {
   Query,
   ParseIntPipe,
   Body,
+  UnauthorizedException,
+  UseGuards,
 } from '@nestjs/common';
 import { HomeService } from './home.service';
 import { CreateHomeDto, HomeResponseDto, UpdateHomeDto } from './dto/home.dto';
 import { ApiTags, ApiCreatedResponse, ApiOkResponse } from '@nestjs/swagger';
-import { PropertyType } from '@prisma/client';
+import { PropertyType, UserType } from '@prisma/client';
+import { User } from 'src/user/decorator/user.decorator';
+import { whichUser } from 'src/Utils.interfaces';
+import { AuthGuard } from 'src/guards.auth';
+import { Roles } from 'src/decorators/roles.decorators';
 
 @ApiTags('home')
 @Controller('home')
@@ -49,23 +55,44 @@ export class HomeController {
   }
 
   @ApiCreatedResponse({ type: HomeResponseDto })
+  @Roles(UserType.REALTOR)
+  @UseGuards(AuthGuard)
   @Post()
-  createHome(@Body() body: CreateHomeDto) {
-    return this.homeService.createHome(body, 1); //FIXME: get realtor id from auth
+  createHome(@Body() body: CreateHomeDto, @User() user: whichUser) {
+    return this.homeService.createHome(body, user.id); //FIXME: get realtor id from auth
   }
 
   @ApiOkResponse({ type: HomeResponseDto })
+  @Roles(UserType.REALTOR)
+  @UseGuards(AuthGuard)
   @Put(':id')
-  updateHome(
+  async updateHome(
     @Param('id', ParseIntPipe) id: number,
     @Body() body: UpdateHomeDto,
+    @User() user: whichUser,
   ) {
+    const realtor = await this.homeService.getRealtorByHomeId(id);
+    if (realtor.id !== user.id) {
+      throw new UnauthorizedException(
+        'You are not authorized to update this home',
+      );
+    }
+
     return this.homeService.updateHome(id, body); //FIXME: get realtor id from auth
   }
 
   @ApiOkResponse({ type: HomeResponseDto })
+  @Roles(UserType.REALTOR)
+  @UseGuards(AuthGuard)
   @Delete(':id')
-  deleteHome(@Param('id') id: number) {
+  async deleteHome(@Param('id') id: number, @User() user: whichUser) {
+    console.log('userId', user);
+    const realtor = await this.homeService.getRealtorByHomeId(id);
+    if (realtor.id !== user.id) {
+      throw new UnauthorizedException(
+        'You are not authorized to delete this home',
+      );
+    }
     return this.homeService.deleteHome(id); //FIXME: get realtor id from auth
   }
 }
